@@ -21,6 +21,16 @@ import time
 import matplotlib.pyplot as plt
 import numpy as np
 
+def plotData(k_to_n_dictionary):
+    keys = list(k_to_n_dictionary.keys())
+    values = list(k_to_n_dictionary.values())
+    
+    plt.plot(keys,values)
+    plt.xlabel('array size')
+    plt.ylabel('best k value')
+    plt.title('best k values for an "n" size array')
+    plt.show()
+
 def Swap(A, i, j):
     A[i], A[j] = A[j], A[i]
 
@@ -72,3 +82,47 @@ def QuickHybridSort(num_array, threshold):
     else:
         left, right = 0, len(num_array)-1
         QuickSort(num_array, left, right, threshold)
+
+#--------------------------------------------------------
+#test cases
+#--------------------------------------------------------
+
+n_array_sizes = [5000, 10000, 25000, 50000, 75000, 100000, 250000, 500000, 850000]
+k_values = [1, 5, 10, 15, 20, 30, 40, 50]
+best_k_per_n_size_array = {}
+
+for n in n_array_sizes:
+    print("\n")
+
+    best_k = None
+    best_time = float('inf')
+    base_arr = list(range(1, n+1))
+    random.shuffle(base_arr)
+
+    for k in k_values:
+        arr = base_arr.copy()
+        expected = sorted(arr)
+
+        start = time.perf_counter()
+        QuickHybridSort(arr, k)
+        end = time.perf_counter()
+        total_time = end - start
+
+        if arr == expected:
+            check = "✔"
+        else:
+            check = "❌"
+            print(f"  ❌ Error: QuickHybridSort failed for n = {n}, k = {k}")
+            print(f"  Expected: {expected[:10]}...")  # only show first few elements
+            print(f"  Got     : {arr[:10]}...")
+            continue  # Skip time comparison if incorrect
+
+        if total_time < best_time:
+            best_time = total_time
+            best_k_per_n_size_array[n] = k
+
+        print(f"Time of execution for array size n = {n}, threshold k = {k}: {total_time:.6f} seconds {check}")
+
+    print(f"\nk value that provides the fastest time for array size {n}: {best_k_per_n_size_array[n]}")
+
+plotData(best_k_per_n_size_array)

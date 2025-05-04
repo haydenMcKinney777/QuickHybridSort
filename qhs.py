@@ -35,10 +35,10 @@ def plotData(k_to_n_dictionary):
 def plotComparison(n_array_sizes, hybrid_times, quick_times, insert_times):
     plt.plot(n_array_sizes, hybrid_times, label='QuickHybridSort', marker='o')
     plt.plot(n_array_sizes, quick_times, label='QuickSort', marker='s')
-    plt.plot(n_array_sizes[:3], insert_times, label='InsertionSort', marker='^')  # Only show InsertionSort for small n
+    plt.plot(n_array_sizes[:3], insert_times, label='InsertionSort', marker='^')  #this will only show InsertionSort for small n
     plt.xlabel('Array Size (n)')
     plt.ylabel('Execution Time (seconds)')
-    plt.title('Execution Time Comparison of Sorting Algorithms')
+    plt.title('Comparison of unsorted (random) arrays')
     plt.legend()
     plt.grid(True)
     plt.show()
@@ -46,6 +46,7 @@ def plotComparison(n_array_sizes, hybrid_times, quick_times, insert_times):
 def Swap(A, i, j):
     A[i], A[j] = A[j], A[i]
 
+#originally i implemented this as we did in class where the pivot is the first element, however I was hitting the recursion depth too many times
 def Partition(A, left, right):
     mid = (left + right) // 2
     pivot_candidates = [(A[left], left), (A[mid], mid), (A[right], right)]
@@ -55,7 +56,7 @@ def Partition(A, left, right):
     i = left
     j = right+1
 
-    while True:
+    while True: #did not know python does not have do while loops. this is the replacement
         while True:
             i += 1
             if i >= right or A[i] >= pivot:
@@ -95,14 +96,14 @@ def QuickHybridSort(num_array, threshold):
     QuickSort(num_array, 0, len(num_array)-1, threshold)
 
 #------------------------------------
-# measure quickHybridSort on sorted inputs for various k
+#measure quickHybridSort on sorted inputs for various k
 #------------------------------------
 print("\n\n==============================")
-print("TASK 2")
+print("measuring average runtimes for various n and k using random arrays")
 print("==============================")
 
-presorted_n_values = [5000, 10000, 25000, 50000, 100000]
-k_values = [1, 5, 10, 15, 20, 30, 40, 50]
+presorted_n_values = [1000, 2500, 5000, 10000, 25000, 50000, 100000, 150000]
+k_values = list(range(1, 101, 5))
 sorted_input_k_vs_time = {}
 
 for n in presorted_n_values:
@@ -121,9 +122,9 @@ for n in presorted_n_values:
 for n in presorted_n_values:
     plt.plot(k_values, sorted_input_k_vs_time[n], label=f'n = {n}', marker='o')
 
-plt.xlabel("Threshold k value")
-plt.ylabel("Execution Time (seconds)")
-plt.title("QuickHybridSort on Sorted Inputs: Time vs k")
+plt.xlabel("threshold k value")
+plt.ylabel("execution time (seconds)")
+plt.title("quickHybridSort on sorted inputs: time vs k")
 plt.legend()
 plt.grid(True)
 plt.show()
@@ -131,7 +132,7 @@ plt.show()
 #------------------------------------
 #------------------------------------
 print("\n\n==============================")
-print("TASK 3: Comparing All Sorts on Sorted Inputs")
+print("comparing all sorts on sorted inputs")
 print("==============================")
 
 hybrid_sorted_times = []
@@ -179,7 +180,7 @@ plt.plot(presorted_n_values, quick_sorted_times, label='QuickSort', marker='s')
 plt.plot(presorted_n_values, insert_sorted_times, label='InsertionSort', marker='^')
 plt.xlabel("Array Size (n)")
 plt.ylabel("Execution Time (seconds)")
-plt.title("Sorted Input: Comparison of Sorting Algorithms")
+plt.title("Performance comparison of sorted arrays")
 plt.legend()
 plt.grid(True)
 plt.show()
@@ -242,10 +243,36 @@ for n in n_array_sizes:
         InsertionSort(insert_arr, 0, len(insert_arr)-1)
         insert_times.append(time.perf_counter() - start)
 
-print("\nBest k values by array size:")
+print("\nbest k values by array size:")
 for n, k in best_k_per_n_size_array.items():
     print(f"n = {n}: best k = {k}")
 
 plotData(best_k_per_n_size_array)
 
 plotComparison(n_array_sizes, hybrid_times, quick_times, insert_times)
+
+
+"""
+
+=====================================================As shown in performance comparison of sorted arrays plot=====================================================================================================
+Insertion Sort has the lowest execution time on sorted inputs. this makes sense because Insertion Sort runs in nearly linear time 
+when the data is already sorted, since no shifting of elements is needed. For example, at n = 100,000 Insertion Sort clearly outperforms both other sorts (QuickSort and QuickHybridSort).
+
+QuickSort on the other hand performs significantly worse than both Insertion Sort and QuickHybridSort on sorted arrays. This is because QuickSorts performance is dependent on the balance of partitions. 
+Even with pivoting on the middle, on sorted arrays the partitions may still become unbalanced or skewed, especially at larger scales. This leads to deeper recursion trees and more 
+overhead and the execution time becomes closer to Θ(n log n) or worse.
+
+QuickHybridSort consistently outperforms standard QuickSort on sorted inputs, especially as n increases. This demonstrates the value of switching to Insertion Sort for small subarrays, which helps avoid the 
+overhead of recursion and partitioning when its unnecessary. It essentially blends the best of both algorithms and mitigates the worst case behavior of pure QuickSort.
+
+=======================================================As shown in the "Comparison of unsorted (random) arrays" graph:=============================================================================================
+
+Insertion Sort performs very poorly on random input. Its time complexity becomes Θ(n²) due to repeated shifting for each out of order element. At n = 25,000 the runtime shoots to over 7 seconds, which is incredibly slower than both QuickSort and QuickHybridSort.
+
+QuickSort and QuickHybridSort both handle random data efficiently, maintaining performance close to Θ(n log n). However QuickHybridSort still offers a slight performance edge over QuickSort (especially for medium-sized arrays) by avoiding unnecessary recursion on small subarrays and delegating those segments to Insertion Sort.
+
+This advantage becomes clear when we look at the best k values determined per n. For instance, k = 15–30 was often optimal, allowing QuickHybridSort to benefit from Insertion Sort’s speed on small partitions without suffering its poor behavior on large random inputs.
+QuickHybridSort consistently combines the strengths of both algorithms. On random data, it performs nearly as fast as QuickSort or faster and avoids the slowdown that you see with Insertion Sort. On sorted data, it takes advantage of Insertion Sort’s efficiency and reduces QuickSort’s partitioning overhead.
+
+"""
+
